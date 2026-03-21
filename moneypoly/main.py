@@ -1,7 +1,10 @@
 from moneypoly.game import Game
 
+"""Main entry point for the Moneypoly game"""
+
 
 def get_player_names():
+    """Ask the user to input player names and Returns a list of names."""
     print("Enter player names separated by commas (minimum 2 players):")
     raw = input("> ").strip()
     names = [n.strip() for n in raw.split(",") if n.strip()]
@@ -9,6 +12,7 @@ def get_player_names():
 
 
 def main():
+    """Set up and run the Moneypoly game"""
     names = get_player_names()
     try:
         game = Game(names)
@@ -21,4 +25,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
