@@ -1,5 +1,5 @@
 """Crew Management module for StreetRace Manager.
-
+    
 Manages roles and skill levels for registered crew members.
 """
 
