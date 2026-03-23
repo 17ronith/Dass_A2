@@ -41,7 +41,10 @@ def assign_car(race_id: str, car_id: str) -> bool:
     race = _races.get(race_id)
     if race is None:
         return False
-    if inventory.get_car(car_id) is None:
+    car = inventory.get_car(car_id)
+    if car is None:
+        return False
+    if car.get("condition") == "damaged":
         return False
     race["car_id"] = car_id
     return True
