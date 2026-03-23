@@ -5,6 +5,7 @@ Assigns missions and verifies required roles are available.
 
 from typing import Dict, List
 
+import crew_availability
 import crew_management
 import inventory
 
@@ -31,6 +32,8 @@ def assign_crew(mission_id: str, member_ids: List[int]) -> bool:
     required_roles = list(mission["required_roles"])
     for member_id in member_ids:
         role = crew_management.get_role(member_id)
+        if not crew_availability.is_available(member_id):
+            return False
         if role in required_roles:
             required_roles.remove(role)
         else:
@@ -51,6 +54,8 @@ def start_mission(mission_id: str) -> bool:
     if not mission["assigned_members"]:
         return False
     mission["status"] = "active"
+    for member_id in mission["assigned_members"]:
+        crew_availability.set_available(member_id, False)
     return True
 
 
@@ -62,6 +67,8 @@ def complete_mission(mission_id: str, reward: int) -> bool:
     if mission["status"] != "active":
         return False
     mission["status"] = "completed"
+    for member_id in mission["assigned_members"]:
+        crew_availability.set_available(member_id, True)
     inventory.update_cash(reward)
     return True
 
