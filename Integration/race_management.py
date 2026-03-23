@@ -5,6 +5,7 @@ Creates races and assigns drivers and cars.
 
 from typing import Dict, Optional
 
+import crew_availability
 import crew_management
 import inventory
 
@@ -28,6 +29,8 @@ def select_driver(race_id: str, member_id: int) -> bool:
     if race is None:
         return False
     if crew_management.get_role(member_id) != race["required_role"]:
+        return False
+    if not crew_availability.is_available(member_id):
         return False
     race["driver_id"] = member_id
     return True
