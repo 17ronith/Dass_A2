@@ -1,0 +1,17 @@
+readme.md
+
+# Python cache/bytecode
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Pytest
+.pytest_cache/
+
+# OS
+.DS_Store
+
+# Artifacts
+quickcart_image/
+quickcart_image.tar
