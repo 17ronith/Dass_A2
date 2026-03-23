@@ -78,9 +78,9 @@ class PropertyGroup:
 
     def all_owned_by(self, player):
         """Return True if every property in this group is owned by `player`."""
-        if player is None:
+        if player is None or not self.properties:
             return False
-        return any(p.owner == player for p in self.properties)
+        return all(p.owner == player for p in self.properties)
 
     def get_owner_counts(self):
         """Return a dict mapping each owner to how many properties they hold in this group."""
