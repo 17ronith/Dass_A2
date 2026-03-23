@@ -1,3 +1,5 @@
+"""Board definitions for Money-Poly tiles and properties."""
+
 from moneypoly.property import Property, PropertyGroup
 from moneypoly.config import (
     JAIL_POSITION,
@@ -7,8 +9,7 @@ from moneypoly.config import (
     LUXURY_TAX_POSITION,
 )
 
-# Maps fixed board positions to their tile type.
-# Properties are looked up separately via get_property_at().
+
 SPECIAL_TILES = {
     0: "go",
     JAIL_POSITION: "jail",
@@ -105,7 +106,7 @@ class Board:
         prop = self.get_property_at(position)
         if prop is None:
             return False
-        if prop.is_mortgaged == True:
+        if prop.is_mortgaged:
             return False
         return prop.owner is None
 
