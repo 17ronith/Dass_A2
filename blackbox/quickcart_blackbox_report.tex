@@ -1,0 +1,232 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{hyperref}
+\usepackage{enumitem}
+
+\title{QuickCart Black Box API Testing Report}
+\author{ }
+\date{March 24, 2026}
+
+\begin{document}
+\maketitle
+
+\section*{Overview}
+This report documents black-box testing for the QuickCart REST API based on the provided documentation. The tests validate correct HTTP status codes, JSON response structures, and data correctness according to the specification. Tests were automated using \texttt{pytest} and \texttt{requests}.
+
+\section*{Environment}
+\begin{itemize}[leftmargin=*]
+  \item Base URL: \texttt{http://localhost:8080/api/v1}
+  \item Headers used: \texttt{X-Roll-Number} and \texttt{X-User-ID} (user-scoped endpoints)
+  \item Tools: \texttt{pytest}, \texttt{requests}
+\end{itemize}
+
+\section*{Test Cases}
+Each case lists input, expected output, and justification.
+
+\renewcommand{\arraystretch}{1.2}
+\setlength{\tabcolsep}{6pt}
+\begin{longtable}{|p{0.7cm}|p{3.2cm}|p{6.7cm}|p{3.2cm}|}
+\hline
+\textbf{ID} & \textbf{Test Case} & \textbf{Input} & \textbf{Expected and Justification} \\
+\hline
+\endfirsthead
+\hline
+\textbf{ID} & \textbf{Test Case} & \textbf{Input} & \textbf{Expected and Justification} \\
+\hline
+\endhead
+\hline
+\endfoot
+
+1 & Missing roll header (admin) & GET \texttt{/admin/users}, no headers & 401. Ensures roll header is mandatory for all requests. \\
+\hline
+2 & Invalid roll header (admin) & GET \texttt{/admin/users}, \texttt{X-Roll-Number: abc} & 400. Validates roll header must be an integer. \\
+\hline
+3 & Missing user header (user endpoint) & GET \texttt{/profile}, only roll header & 400. Confirms user header required for user endpoints. \\
+\hline
+4 & Missing roll header (user endpoint) & GET \texttt{/profile}, only user header & 401. Confirms roll header required for all requests. \\
+\hline
+5 & Invalid roll header (user endpoint) & GET \texttt{/profile}, roll header non-integer & 400. Enforces roll header format. \\
+\hline
+6 & Invalid user header non-integer & GET \texttt{/profile}, user header \texttt{abc} & 400. User ID must be integer. \\
+\hline
+7 & Invalid user header negative & GET \texttt{/profile}, user header \texttt{-1} & 400. User ID must be positive. \\
+\hline
+8 & Get profile & GET \texttt{/profile} with valid headers & 200 + JSON. Verifies profile retrieval. \\
+\hline
+9 & Profile update invalid name & PUT \texttt{/profile}, name length 1 & 400. Enforces name length lower bound. \\
+\hline
+10 & Profile update invalid phone length & PUT \texttt{/profile}, phone length 3 & 400. Enforces 10-digit phone rule. \\
+\hline
+11 & Profile update name too long & PUT \texttt{/profile}, name length 51 & 400. Enforces name length upper bound. \\
+\hline
+12 & Profile update phone non-digit & PUT \texttt{/profile}, phone contains letters & 400. Enforces numeric phone requirement. \\
+\hline
+13 & Profile update valid no-change & PUT \texttt{/profile}, same name/phone as current & 200. Valid inputs should be accepted even if unchanged. \\
+\hline
+14 & Address add invalid label & POST \texttt{/addresses}, label \texttt{INVALID} & 400. Label must be HOME/OFFICE/OTHER. \\
+\hline
+15 & Address add label lowercase & POST \texttt{/addresses}, label \texttt{home} & 400. Enforces strict enum values. \\
+\hline
+16 & Address add street too short & POST \texttt{/addresses}, street length 3 & 400. Enforces street length 5--100. \\
+\hline
+17 & Address add city too short & POST \texttt{/addresses}, city length 1 & 400. Enforces city length 2--50. \\
+\hline
+18 & Address add pincode short & POST \texttt{/addresses}, pincode 5 digits & 400. Enforces pincode length 6. \\
+\hline
+19 & Address add pincode non-digit & POST \texttt{/addresses}, pincode contains letter & 400. Enforces digits only. \\
+\hline
+20 & Address add/update/delete flow & POST two addresses, GET list, PUT update, DELETE cleanup & 200 and correct data. Validates default rule and update response. \\
+\hline
+21 & Address delete missing & DELETE \texttt{/addresses/99999999} & 404. Correct missing resource handling. \\
+\hline
+22 & Address list get & GET \texttt{/addresses} & 200. Verifies list endpoint works. \\
+\hline
+23 & Products list excludes inactive & GET \texttt{/products}, compare with admin inactive & 200, inactive not present. Enforces visibility rule. \\
+\hline
+24 & Product get not found & GET \texttt{/products/{id}} nonexistent & 404. Proper not-found behavior. \\
+\hline
+25 & Product get active & GET \texttt{/products/{activeId}} & 200 and matching product ID. Valid lookup behavior. \\
+\hline
+26 & Products filter by category & GET \texttt{/products?category=...} & 200, all results match category. Validates filter. \\
+\hline
+27 & Products search by name & GET \texttt{/products?search=...} & 200, names contain query. Validates search. \\
+\hline
+28 & Product price exact match & GET \texttt{/products/{id}} vs admin price & Prices equal. Ensures exact price accuracy. \\
+\hline
+29 & Cart add quantity 0 & POST \texttt{/cart/add}, quantity 0 & 400. Enforces minimum quantity rule. \\
+\hline
+30 & Cart add nonexistent product & POST \texttt{/cart/add}, invalid product ID & 404. Invalid product should be rejected. \\
+\hline
+31 & Cart add negative quantity & POST \texttt{/cart/add}, quantity -1 & 400. Reject negative quantities. \\
+\hline
+32 & Cart add and totals & POST add valid item, GET cart & 200, subtotal = qty*price, total sum correct. Validates cart math. \\
+\hline
+33 & Cart add exceeds stock & POST \texttt{/cart/add} quantity > stock & 400. Enforces stock limit. \\
+\hline
+34 & Cart add same product accumulates & POST add same item twice & 200, quantity sums. Validates accumulation. \\
+\hline
+35 & Cart update quantity 0 & POST \texttt{/cart/update} quantity 0 & 400. Update must be >= 1. \\
+\hline
+36 & Cart update valid quantity & POST add item, POST update to higher qty & 200 and quantity updated. Valid update flow. \\
+\hline
+37 & Cart update negative quantity & POST \texttt{/cart/update} quantity -2 & 400. Reject negative updates. \\
+\hline
+38 & Cart remove missing & POST \texttt{/cart/remove} missing item & 404. Correct error for missing item. \\
+\hline
+39 & Cart remove existing & POST add item, POST remove, GET cart & 200, item removed. Valid remove flow. \\
+\hline
+40 & Cart clear empties & POST add item, DELETE \texttt{/cart/clear} & 200, cart empty. Valid clear flow. \\
+\hline
+41 & Coupon apply expired/minimum & POST \texttt{/coupon/apply} with real code & 200 or 400 depending on rules. Verifies coupon validation path. \\
+\hline
+42 & Checkout empty cart & POST \texttt{/checkout} with empty cart & 400. Cart must not be empty. \\
+\hline
+43 & Checkout invalid payment method & POST \texttt{/checkout} payment method CASH & 400. Only COD/WALLET/CARD allowed. \\
+\hline
+44 & Checkout COD over limit & Build cart > 5000, POST COD checkout & 400. Enforces COD limit. \\
+\hline
+45 & Wallet add invalid amount & POST \texttt{/wallet/add} amount 0 & 400. Enforces lower bound. \\
+\hline
+46 & Wallet get balance & GET \texttt{/wallet} & 200 with balance field. Verifies wallet retrieval. \\
+\hline
+47 & Wallet add valid amount & POST add 1, GET wallet & Balance increases by 1. Correct wallet credit. \\
+\hline
+48 & Wallet add too large & POST \texttt{/wallet/add} amount 100001 & 400. Enforces upper bound. \\
+\hline
+49 & Wallet pay insufficient & POST \texttt{/wallet/pay} amount > balance & 400. Prevents overdraft. \\
+\hline
+50 & Wallet pay invalid amount & POST \texttt{/wallet/pay} amount 0 & 400. Enforces positive payment. \\
+\hline
+51 & Wallet pay valid amount & Add 1, pay 1, GET wallet & Balance decreases by 1. Correct debit. \\
+\hline
+52 & Loyalty redeem invalid amount & POST \texttt{/loyalty/redeem} amount 0 & 400. Enforces minimum redeem. \\
+\hline
+53 & Loyalty get points & GET \texttt{/loyalty} & 200 with points field. Valid retrieval. \\
+\hline
+54 & Loyalty redeem insufficient points & POST redeem > available & 400. Prevents over-redeem. \\
+\hline
+55 & Loyalty redeem valid (if points) & POST redeem 1 with points >= 1 & 200. Valid redemption. \\
+\hline
+56 & Order cancel missing & POST \texttt{/orders/999999/cancel} & 404. Proper missing order handling. \\
+\hline
+57 & Orders list get & GET \texttt{/orders} & 200. List endpoint works. \\
+\hline
+58 & Order detail get & GET \texttt{/orders/{id}} & 200. Detail endpoint works. \\
+\hline
+59 & Invoice totals correctness & GET \texttt{/orders/{id}/invoice} & Total = subtotal + GST. Valid invoice math. \\
+\hline
+60 & Review invalid rating & POST \texttt{/products/{id}/reviews} rating 6 & 400. Rating must be 1--5. \\
+\hline
+61 & Reviews list get & GET \texttt{/products/{id}/reviews} & 200. List endpoint works. \\
+\hline
+62 & Review add valid & POST review rating 5, short comment & 200. Valid create flow. \\
+\hline
+63 & Review comment too long & POST review comment length 201 & 400. Comment length upper bound. \\
+\hline
+64 & Review empty comment & POST review comment empty & 400. Comment length lower bound. \\
+\hline
+65 & Support ticket status flow & POST ticket, PUT to IN\_PROGRESS, CLOSED, then OPEN & 200,200,200, then 400. Enforces one-way status. \\
+\hline
+66 & Support tickets list contains new & POST ticket, GET list & New ticket appears. List reflects creation. \\
+\hline
+67 & Support ticket invalid subject & POST subject length 3 & 400. Subject length lower bound. \\
+\hline
+68 & Support ticket empty message & POST empty message & 400. Message length lower bound. \\
+\hline
+69 & Support ticket message too long & POST message length 501 & 400. Message length upper bound. \\
+\hline
+70 & Cancel delivered order & POST cancel delivered order & 400. Delivered orders cannot be cancelled. \\
+\hline
+\end{longtable}
+
+\section*{Bug Reports}
+Each bug includes endpoint, request, expected result, and actual result observed.
+
+\subsection*{Bug 1: Address creation rejects valid payload}
+\textbf{Endpoint:} POST \texttt{/api/v1/addresses} \\
+\textbf{Request:} Headers: \texttt{X-Roll-Number: 123}, \texttt{X-User-ID: 799}; Body: \{label: HOME, street: 123 Main Street, city: Metropolis, pincode: 123456, is\_default: true\} \\
+\textbf{Expected:} 200 with created address object \\
+\textbf{Actual:} 400 Bad Request
+
+\subsection*{Bug 2: Cart add accepts quantity 0}
+\textbf{Endpoint:} POST \texttt{/api/v1/cart/add} \\
+\textbf{Request:} Headers: \texttt{X-Roll-Number: 123}, \texttt{X-User-ID: 799}; Body: \{product\_id: 1, quantity: 0\} \\
+\textbf{Expected:} 400 Bad Request \\
+\textbf{Actual:} 200 OK
+
+\subsection*{Bug 3: Profile update accepts non-digit phone}
+\textbf{Endpoint:} PUT \texttt{/api/v1/profile} \\
+\textbf{Request:} Headers: \texttt{X-Roll-Number: 123}, \texttt{X-User-ID: 799}; Body: \{name: Valid Name, phone: 12345abcde\} \\
+\textbf{Expected:} 400 Bad Request \\
+\textbf{Actual:} 200 OK
+
+\subsection*{Bug 4: Address creation accepts short pincode}
+\textbf{Endpoint:} POST \texttt{/api/v1/addresses} \\
+\textbf{Request:} Headers: \texttt{X-Roll-Number: 123}, \texttt{X-User-ID: 799}; Body: \{label: HOME, street: 123 Main Street, city: Metropolis, pincode: 12345, is\_default: false\} \\
+\textbf{Expected:} 400 Bad Request \\
+\textbf{Actual:} 200 OK
+
+\subsection*{Bug 5: Cart add accepts negative quantity}
+\textbf{Endpoint:} POST \texttt{/api/v1/cart/add} \\
+\textbf{Request:} Headers: \texttt{X-Roll-Number: 123}, \texttt{X-User-ID: 799}; Body: \{product\_id: 1, quantity: -1\} \\
+\textbf{Expected:} 400 Bad Request \\
+\textbf{Actual:} 200 OK
+
+\subsection*{Bug 6: Loyalty redeem fails with points available}
+\textbf{Endpoint:} POST \texttt{/api/v1/loyalty/redeem} \\
+\textbf{Request:} Headers: \texttt{X-Roll-Number: 123}, \texttt{X-User-ID: 799}; Body: \{amount: 1\} \\
+\textbf{Expected:} 200 OK when points \(\ge 1\) \\
+\textbf{Actual:} 400 Bad Request (points reported \(\ge 1\))
+
+\subsection*{Bug 7: Invoice totals incorrect}
+\textbf{Endpoint:} GET \texttt{/api/v1/orders/{order\_id}/invoice} \\
+\textbf{Request:} Headers: \texttt{X-Roll-Number: 123}, \texttt{X-User-ID: 799} \\
+\textbf{Expected:} \(\text{total} = \text{subtotal} + \text{GST}\) \\
+\textbf{Actual:} \texttt{total} does not equal \texttt{subtotal + gst} (observed total 0.0 with non-zero subtotal/gst)
+
+\section*{Notes}
+Skipped tests are not bugs; they indicate missing data required to execute a test (for example, no inactive products or no orders for the user).
+
+\end{document}
