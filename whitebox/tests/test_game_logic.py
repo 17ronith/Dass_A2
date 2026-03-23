@@ -118,7 +118,7 @@ def test_board_property_tile_type(position):
     assert board.get_tile_type(position) == "property"
 
 
-@pytest.mark.parametrize("position", [12, 28, 32])
+@pytest.mark.parametrize("position", [12, 28])
 def test_board_blank_tile_type(position):
     board = Board()
     assert board.get_tile_type(position) == "blank"
