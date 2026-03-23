@@ -1,4 +1,7 @@
-class Property:
+"""Property and property group models for Money-Poly."""
+
+
+class Property:  # pylint: disable=too-many-instance-attributes,too-many-arguments,too-many-positional-arguments
     """Represents a single purchasable property tile on the MoneyPoly board."""
 
     FULL_GROUP_MULTIPLIER = 2
@@ -47,10 +50,9 @@ class Property:
         """
         if not self.is_mortgaged:
             return 0
-        else:
-            cost = int(self.mortgage_value * 1.1)
-            self.is_mortgaged = False
-            return cost
+        cost = int(self.mortgage_value * 1.1)
+        self.is_mortgaged = False
+        return cost
 
     def is_available(self):
         """Return True if this property can be purchased (unowned, not mortgaged)."""
@@ -62,6 +64,7 @@ class Property:
 
 
 class PropertyGroup:
+    """Collection of properties that share a color group."""
     def __init__(self, name, color):
         self.name = name
         self.color = color
