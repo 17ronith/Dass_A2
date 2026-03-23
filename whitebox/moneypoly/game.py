@@ -1,7 +1,6 @@
-import os
+"""Game loop and core rules for Money-Poly."""
 
 from moneypoly.config import (
-    GO_TO_JAIL_POSITION,
     JAIL_FINE,
     AUCTION_MIN_INCREMENT,
     INCOME_TAX_AMOUNT,
@@ -17,7 +16,7 @@ from moneypoly.cards import CardDeck, CHANCE_CARDS, COMMUNITY_CHEST_CARDS
 from moneypoly import ui
 
 
-class Game:
+class Game:  # pylint: disable=too-many-instance-attributes
     """Manages the full state and flow of a MoneyPoly game session."""
 
     def __init__(self, player_names):
@@ -292,7 +291,7 @@ class Game:
             print(f"  {player.name} rolled: {self.dice.describe()}")
             self._move_and_resolve(player, roll)
 
-    def _apply_card(self, player, card):
+    def _apply_card(self, player, card):  # pylint: disable=too-many-branches
         """Apply the effect of a drawn Chance or Community Chest card."""
         if card is None:
             return
@@ -378,7 +377,7 @@ class Game:
 
         winner = self.find_winner()
         if winner:
-            ui.print_banner(f"GAME OVER")
+            ui.print_banner("GAME OVER")
             print(f"\n  {winner.name} wins with a net worth of ${winner.net_worth()}!\n")
         else:
             print("\n  The game ended with no players remaining.")
@@ -401,17 +400,17 @@ class Game:
 
             if choice == 0:
                 break
-            elif choice == 1:
+            if choice == 1:
                 ui.print_standings(self.players)
-            elif choice == 2:
+            if choice == 2:
                 ui.print_board_ownership(self.board)
-            elif choice == 3:
+            if choice == 3:
                 self._menu_mortgage(player)
-            elif choice == 4:
+            if choice == 4:
                 self._menu_unmortgage(player)
-            elif choice == 5:
+            if choice == 5:
                 self._menu_trade(player)
-            elif choice == 6:
+            if choice == 6:
                 amount = ui.safe_int_input("  Loan amount: ", default=0)
                 if amount > 0:
                     self.bank.give_loan(player, amount)
@@ -450,7 +449,7 @@ class Game:
         for i, p in enumerate(others):
             print(f"  {i + 1}. {p.name}  (${p.balance})")
         idx = ui.safe_int_input("  Trade with: ", default=0) - 1
-        if not (0 <= idx < len(others)):
+        if not 0 <= idx < len(others):
             return
         partner = others[idx]
         if not player.properties:
@@ -459,7 +458,7 @@ class Game:
         for i, prop in enumerate(player.properties):
             print(f"  {i + 1}. {prop.name}")
         pidx = ui.safe_int_input("  Property to offer: ", default=0) - 1
-        if not (0 <= pidx < len(player.properties)):
+        if not 0 <= pidx < len(player.properties):
             return
         chosen_prop = player.properties[pidx]
         cash = ui.safe_int_input(
