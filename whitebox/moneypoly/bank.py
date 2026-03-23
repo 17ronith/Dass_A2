@@ -1,8 +1,10 @@
-import math
-from moneypoly.config import BANK_STARTING_FUNDS
+"""Bank module for managing Money-Poly cash reserves and loans."""
+
+from .config import BANK_STARTING_FUNDS
 
 
 class Bank:
+    """Track bank funds, collections, and emergency loans."""
     def __init__(self):
         self._funds = BANK_STARTING_FUNDS
         self._loans_issued = []
