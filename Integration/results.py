@@ -5,6 +5,7 @@ Records race outcomes, updates rankings, and handles prize money.
 
 from typing import Dict, List
 
+import crew_availability
 import inventory
 
 
@@ -34,6 +35,7 @@ def record_result(
     update_rankings(member_id, outcome)
     inventory.update_cash(prize_money)
     inventory.update_car_condition(car_id, car_damage)
+    crew_availability.set_available(member_id, True)
 
 
 def update_rankings(member_id: int, outcome: str) -> None:
